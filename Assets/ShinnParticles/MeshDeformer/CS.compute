@@ -1,0 +1,29 @@
+﻿
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+ 
+struct DeformBuffer
+{
+    float3 vertexPos;//作用的mesh顶点
+};
+ 
+RWStructuredBuffer<DeformBuffer> dBuffer;
+float force;//力
+float3 pressPos;//力的作用点
+uint groupx;
+uint groupy;
+ 
+ 
+[numthreads(8,8,8)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+ 
+	int index = id.x + id.y * groupx * 8 + id.z * groupx * groupy * 8 * 8;
+	
+    float3 pointToVertex =  dBuffer[index].vertexPos -pressPos;
+	float attenuatedForce = force / (1 +length(pointToVertex));
+ 
+    float3 Velocity0 = normalize( pointToVertex) * attenuatedForce * 0.01f;
+    dBuffer[index].vertexPos += Velocity0;
+       
+}
